@@ -1,0 +1,264 @@
+'use client'
+
+import { useForm, SubmitHandler, Resolver } from 'react-hook-form'
+import { useRouter } from 'next/navigation'
+import { Camper, Payment } from '@prisma/client'
+import useAction from '@/hooks/useAction'
+import paymentAction from '@/actions/paymentAction'
+import { useEffect } from 'react'
+
+interface FormData {
+  paymentMethod: string
+  nameOfProof: string
+  receiptNumber: string
+  quantity: number
+  registeredBy: string
+}
+
+// Custom resolver for validation
+const formResolver: Resolver<FormData> = (values) => {
+  const errors: Partial<Record<keyof FormData, { type: string; message: string }>> = {}
+
+  // Validate payment method
+  if (!values.paymentMethod || values.paymentMethod === 'default') {
+    errors.paymentMethod = {
+      type: 'required',
+      message: 'Método de pago es requerido'
+    }
+  }
+
+  // Validate name of proof
+  if (!values.nameOfProof || values.nameOfProof.trim().length < 3) {
+    errors.nameOfProof = {
+      type: 'required',
+      message: 'Nombre del depositante es requerido'
+    }
+  }
+
+  // Validate receipt number
+  if (!values.receiptNumber || values.receiptNumber.trim() === '') {
+    errors.receiptNumber = {
+      type: 'required',
+      message: 'Número de recibo es requerido'
+    }
+  }
+  // Validate quantity
+  if (!values.quantity) {
+    errors.quantity = {
+      type: 'required',
+      message: 'Cantidad es requerida'
+    }
+  } else if (isNaN(values.quantity) || values.quantity < 1) {
+    errors.quantity = {
+      type: 'min',
+      message: 'Cantidad debe ser al menos 1'
+    }
+  }
+
+  // Validate registeredBy
+  if (!values.registeredBy || values.registeredBy.trim().length < 3) {
+    errors.registeredBy = {
+      type: 'required',
+      message: 'Nombre de la persona que le inscribió es requerido'
+    }
+  }
+
+  return {
+    values: Object.keys(errors).length === 0 ? values : {},
+    errors
+  }
+}
+
+type Props = {
+  camper: Camper
+  payments: Payment[]
+}
+
+export default function PaymentForm({ camper, payments }: Props) {
+  const { data, isPending, run } = useAction(paymentAction, { success: false, payments: payments })
+
+  console.log('data:', data)
+
+  const router = useRouter()
+
+  const { register, handleSubmit, formState: { errors }, setValue } = useForm<FormData>({
+    defaultValues: {
+      paymentMethod: 'default',
+      nameOfProof: camper.firstName + ' ' + camper.lastName,
+      receiptNumber: '',
+      quantity: 500,
+      registeredBy: ''
+    },
+    resolver: formResolver
+  })
+
+  const onSubmit: SubmitHandler<FormData> = async (data) => {
+    const paymentMethodEnum = data.paymentMethod === 'TRANSFER' ? 'TRANSFER' : 'CASH'
+
+    const admin = data.registeredBy
+    localStorage.setItem('admin', JSON.stringify(admin))
+
+    await run({
+      ...data,
+      paymentMethod: paymentMethodEnum,
+      receiptNumber: Number(data.receiptNumber),
+      camperId: camper.id
+    })
+  }
+
+  const handleInscribirOtro = () => {
+    router.push('/')
+  }
+
+  useEffect(() => {
+    const storedAdmin = localStorage.getItem('admin')
+    if (storedAdmin) {
+      const admin = JSON.parse(storedAdmin)
+      setValue('registeredBy', admin)
+    }
+  }, [])
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} className='space-y-6 text-gray-800'>
+      <div>
+        <label htmlFor='paymentMethod' className='block text-sm font-medium text-gray-700 mb-1'>Método de Pago</label>
+        <select
+          id='paymentMethod'
+          className={`w-full h-[42px] px-4 py-2 border ${errors.paymentMethod ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors`}
+          {...register('paymentMethod')}
+        >
+          <option disabled value='default'>Seleccionar</option>
+          <option value='CASH'>Efectivo</option>
+          <option value='TRANSFER'>Transferencia</option>
+        </select>
+        {errors.paymentMethod && <p className='mt-1 text-xs text-red-600'>{errors.paymentMethod.message}</p>}
+      </div>      <div>
+        <label htmlFor='quantity' className='block text-sm font-medium text-gray-700 mb-1'>Cantidad</label>
+        <div className='relative rounded-md'>
+          <input
+            type='number'
+            id='quantity'
+            min='1'
+            className={`w-full pr-12 px-4 py-2 border ${errors.quantity ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors`}
+            placeholder='Cantidad'
+            {...register('quantity', { valueAsNumber: true })}
+          />
+          <div className='absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none'>
+            <span className='text-gray-500 sm:text-sm'>
+              HNL
+            </span>
+          </div>
+        </div>
+        {errors.quantity && <p className='mt-1 text-xs text-red-600'>{errors.quantity.message}</p>}
+      </div>
+      <div>
+        <label htmlFor='nameOfProof' className='block text-sm font-medium text-gray-700 mb-1'>Nombre del Depositante (A nombre de quien esta la transferencia)</label>
+        <input
+          type='text'
+          id='nameOfProof'
+          className={`w-full px-4 py-2 border ${errors.nameOfProof ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors`}
+          placeholder='Persona que realizó la transferencia o pago'
+          {...register('nameOfProof')}
+        />
+        {errors.nameOfProof && <p className='mt-1 text-xs text-red-600'>{errors.nameOfProof.message}</p>}
+      </div>
+      <div>
+        <label htmlFor='receiptNumber' className='block text-sm font-medium text-gray-700 mb-1'>Número de Recibo</label>
+        <input
+          type='text'
+          id='receiptNumber'
+          className={`w-full px-4 py-2 border ${errors.receiptNumber ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors`}
+          placeholder='Ingrese el número de recibo en el talonario'
+          {...register('receiptNumber')}
+        />        {errors.receiptNumber && <p className='mt-1 text-xs text-red-600'>{errors.receiptNumber.message}</p>}
+      </div>
+      <div>
+        <label htmlFor='registeredBy' className='block text-sm font-medium text-gray-700 mb-1'>Inscrito Por</label>
+        <input
+          type='text'
+          id='registeredBy'
+          className={`w-full px-4 py-2 border ${errors.registeredBy ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors`}
+          placeholder='Nombre de la persona que le inscribió'
+          {...register('registeredBy')}
+        />
+        {errors.registeredBy && <p className='mt-1 text-xs text-red-600'>{errors.registeredBy.message}</p>}
+      </div>      <div className='pt-4 space-y-3'>
+        <button
+          type='submit'
+          disabled={isPending}
+          className='w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all transform hover:scale-[1.02] disabled:hover:scale-[1] disabled:cursor-not-allowed disabled:opacity-70'
+        >
+          Agregar Pago
+        </button>
+        <div className='mt-6'>
+          <h3 className='text-lg font-medium text-gray-900 mb-3'>Historial de Pagos</h3>
+          <div className='bg-white shadow overflow-hidden rounded-lg'>
+            <ul className='divide-y divide-gray-200'>
+              {data.payments.length === 0 &&
+                <li className='px-4 py-3 text-center text-gray-500'>
+                  No hay pagos registrados.
+                </li>
+              }
+              {data.payments.map((payment) => (
+                <li key={payment.id} className='px-4 py-3'>
+                  <div className='flex items-center justify-between'>
+                    <div>
+                      <p className='text-sm font-medium text-gray-900'>
+                        {payment.nameOfproof}
+                      </p>
+                      <p className='text-xs text-gray-500'>
+                        Fecha: {new Date(payment.createdAt).toLocaleDateString()}
+                      </p>
+                      <p className='text-xs text-gray-500'>
+                        Recibo #: {payment.receiptNumber}
+                      </p>
+                      <p className='text-xs text-gray-500'>
+                        Registrado por: {payment.registeredBy}
+                      </p>
+                      <p className={`text-xs ${payment.confirmPayment ? 'text-green-500' : 'text-red-500'}`}>
+                        Pago Confirmado: {payment.confirmPayment ? 'Sí' : 'No'}
+                      </p>
+                    </div>
+                    <div>
+                      <span className='inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800'>
+                        {payment.paymentMethod === 'TRANSFER' ? 'Transferencia' : 'Efectivo'}
+                      </span>
+                      <p className='text-sm font-semibold text-gray-900 mt-1 text-right'>
+                        L. {payment.quantity}
+                      </p>
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+            <div className='bg-gray-50 px-4 py-3'>
+              <div className='flex justify-between items-center'>
+                <span className='text-sm text-gray-700'>Total Pagado:</span>
+                <span className='text-sm font-bold text-gray-900'>
+                  L. {data.payments.reduce((sum, payment) => sum + payment.quantity, 0)}
+                </span>
+              </div>
+              {camper.totalToPaid > data.payments.reduce((sum, payment) => sum + payment.quantity, 0) && (
+                <div className='flex justify-between items-center mt-1'>
+                  <span className='text-sm text-gray-700'>Saldo Pendiente:</span>
+                  <span className='text-sm font-bold text-red-600'>
+                    L. {camper.totalToPaid - data.payments.reduce((sum, payment) => sum + payment.quantity, 0)}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <button
+          type='button'
+          onClick={handleInscribirOtro}
+          disabled={isPending}
+          className='w-full flex justify-center py-3 px-4 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all transform hover:scale-[1.02] disabled:hover:scale-[1] disabled:cursor-not-allowed disabled:opacity-70'
+        >
+          Inscribir Otro
+        </button>
+      </div>
+    </form>
+  )
+}
