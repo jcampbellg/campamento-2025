@@ -1,5 +1,5 @@
 'use server'
-import { Payment } from '@/generated/prisma/client'
+import { Payment } from '@prisma-db-1/client'
 import prisma from '@/utils/prismaClient'
 
 interface FormData {

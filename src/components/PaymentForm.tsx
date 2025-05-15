@@ -2,7 +2,7 @@
 
 import { useForm, SubmitHandler, Resolver } from 'react-hook-form'
 import { useRouter } from 'next/navigation'
-import { Camper, Payment } from '@prisma/client'
+import { Camper, Payment } from '@prisma-db-1/client'
 import useAction from '@/hooks/useAction'
 import paymentAction from '@/actions/paymentAction'
 import { useEffect } from 'react'
