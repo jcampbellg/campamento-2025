@@ -5,13 +5,15 @@
   "scripts": {
     "dev": "next dev",
     "build": "npx prisma generate && next build",
-    "server": "concurrently \"yarn start\" \"npx prisma studio\"",
-    "start": "next start",
-    "lint": "next lint"
+    "start": "concurrently \"yarn frontend\" \"npx prisma studio\"",
+    "frontend": "next start",
+    "lint": "next lint",
+    "proxy-server": "node server/index.js"
   },
   "dependencies": {
     "@prisma/client": "^6.7.0",
     "concurrently": "^9.1.2",
+    "express": "^5.1.0",
     "next": "15.3.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
@@ -26,6 +28,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.3.2",
+    "http-proxy-middleware": "^3.0.5",
     "prisma": "^6.7.0",
     "tailwindcss": "^4",
     "typescript": "^5"
