@@ -1,7 +1,11 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from "next"
 
 const nextConfig: NextConfig = {
-  /* config options here */
-};
+  // // Allow assets to be served properly when accessed through a proxy
+  // assetPrefix: process.env.NODE_ENV === 'production' ? '/registro' : '',
 
-export default nextConfig;
+  // // Ensure server knows to serve static assets from _next path
+  // poweredByHeader: false,
+}
+
+export default nextConfig
