@@ -17,7 +17,7 @@ model Camper {
   gender       Gender
   age          Int
   shirtSize    ShirtSize
-  allergies    String
+  notes        String
   whatsapp     String
   payments     Payment[] @relation(name: "PaymentToCamper")
   totalToPaid  Int       @default(1500)
@@ -30,7 +30,7 @@ model Payment {
   nameOfproof    String
   createdAt      DateTime      @default(now())
   updatedAt      DateTime?     @updatedAt
-  receiptNumber  Int
+  receiptNumber  String
   camperId       Int
   camper         Camper        @relation(name: "PaymentToCamper", fields: [camperId], references: [id])
   quantity       Int

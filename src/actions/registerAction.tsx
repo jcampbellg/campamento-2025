@@ -8,7 +8,7 @@ interface FormData {
   gender: 'FEMALE' | 'MALE'
   age: number
   shirtSize: 'XS' | 'S' | 'M' | 'L' | 'XL' | 'XXL' | 'XXXL' | 'XXXXL'
-  allergies: string
+  notes: string
   country: 'US' | 'HN'
   whatsapp: string
   registeredBy: string
@@ -24,7 +24,7 @@ export default async function registerAction(_: undefined | ReturnAction, payloa
       firstName: payload.firstName,
       lastName: payload.lastName,
       age: payload.age,
-      allergies: payload.allergies,
+      notes: payload.notes,
       gender: payload.gender,
       registeredBy: payload.registeredBy,
       shirtSize: payload.shirtSize,

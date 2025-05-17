@@ -5,7 +5,7 @@ import prisma from '@/utils/prismaClient'
 interface FormData {
   paymentMethod: 'TRANSFER' | 'CASH'
   nameOfProof: string
-  receiptNumber: number
+  receiptNumber: string
   quantity: number
   registeredBy: string
   camperId: number

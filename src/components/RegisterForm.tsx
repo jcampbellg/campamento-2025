@@ -15,7 +15,7 @@ interface FormData {
   gender: 'FEMALE' | 'MALE' | 'default'
   age: number | ''
   shirtSize: 'XS' | 'S' | 'M' | 'L' | 'XL' | 'XXL' | 'XXXL' | 'XXXXL' | 'default'
-  allergies: string
+  notes: string
   country: 'US' | 'HN'
   whatsapp: string
   registeredBy: string
@@ -116,7 +116,7 @@ export default function RegisterForm() {
       gender: 'default',
       age: '',
       shirtSize: 'default',
-      allergies: '',
+      notes: '',
       country: 'HN',
       whatsapp: '',
       registeredBy: ''
@@ -274,13 +274,13 @@ export default function RegisterForm() {
         </p>
       </div>      {/* Allergies Field */}
       <div>
-        <label htmlFor='allergies' className='block text-sm font-medium text-gray-700 mb-1'>Alergias / Notas</label>
+        <label htmlFor='notes' className='block text-sm font-medium text-gray-700 mb-1'>Alergias / Notas</label>
         <textarea
-          id='allergies'
+          id='notes'
           className='w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors'
           rows={3}
           placeholder='Especifique sus alergias o cualquier otra nota importante'
-          {...register('allergies')}
+          {...register('notes')}
         ></textarea>
       </div>      {/* Registered By Field */}
       <div>
