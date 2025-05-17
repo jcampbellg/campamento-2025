@@ -45,7 +45,7 @@ export default async function CamperPage({ params }: { params: Promise<{ camperI
           <p className='text-blue-100 text-center mt-2'>Nombre: {camper.firstName} {camper.lastName}</p>
           <p className='text-blue-100 text-center mt-2'>ID: {camper.id}</p>
         </div>
-        <div className='p-8'>
+        <div className='p-4 sm:p-8'>
           <PaymentForm camper={camper} payments={payments || []} />
         </div>
       </div>
