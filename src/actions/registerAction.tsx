@@ -21,12 +21,12 @@ interface ReturnAction {
 export default async function registerAction(_: undefined | ReturnAction, payload: FormData): Promise<ReturnAction> {
   const newCamper = await prisma.camper.create({
     data: {
-      firstName: payload.firstName,
-      lastName: payload.lastName,
+      firstName: payload.firstName.trim(),
+      lastName: payload.lastName.trim(),
       age: payload.age,
-      notes: payload.notes,
+      notes: payload.notes.trim(),
       gender: payload.gender,
-      registeredBy: payload.registeredBy,
+      registeredBy: payload.registeredBy.trim(),
       shirtSize: payload.shirtSize,
       whatsapp: payload.whatsapp
     }

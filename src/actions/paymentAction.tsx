@@ -24,11 +24,11 @@ export default async function paymentAction(_: ReturnAction, payload: FormData):
 
   const newPayment = await prisma.payment.create({
     data: {
-      nameOfproof: payload.nameOfProof,
+      nameOfproof: payload.nameOfProof.trim(),
       paymentMethod: payload.paymentMethod,
       quantity: payload.quantity,
-      receiptNumber: payload.receiptNumber,
-      registeredBy: payload.registeredBy,
+      receiptNumber: payload.receiptNumber.trim(),
+      registeredBy: payload.registeredBy.trim(),
       camperId: payload.camperId,
       confirmPayment: payload.paymentMethod === 'TRANSFER' ? false : true
     }

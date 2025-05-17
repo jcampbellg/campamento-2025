@@ -95,7 +95,7 @@ export default function PaymentForm({ camper, payments }: Props) {
   const onSubmit: SubmitHandler<FormData> = async (data) => {
     const paymentMethodEnum = data.paymentMethod === 'TRANSFER' ? 'TRANSFER' : 'CASH'
 
-    const admin = data.registeredBy
+    const admin = data.registeredBy.trim()
     localStorage.setItem('admin', JSON.stringify(admin))
 
     await run({
