@@ -194,7 +194,7 @@ export default function PaymentForm({ camper, payments }: Props) {
             )
           }}
         />
-        <p className='mt-1 text-xs text-gray-500'>Formatos aceptados: JPG, PNG, PDF</p>
+        <p className='mt-1 text-xs text-gray-500'>Formatos aceptados: JPG, PNG</p>
       </div>
 
       <div>
