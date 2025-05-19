@@ -34,7 +34,7 @@ const formResolver: Resolver<FormData> = (values) => {
   }
 
   // Validate receipt number
-  if (!values.receiptNumber || values.receiptNumber.trim() === '') {
+  if (!values.receiptNumber || !values.receiptNumber.match(/^\d{3}$/)) {
     errors.receiptNumber = {
       type: 'required',
       message: 'Número de recibo es requerido'
