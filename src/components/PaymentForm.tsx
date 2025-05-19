@@ -6,6 +6,12 @@ import { Camper, Payment } from '@prisma-db-1/client'
 import useAction from '@/hooks/useAction'
 import paymentAction from '@/actions/paymentAction'
 import { useEffect } from 'react'
+import { mask, createDefaultMaskGenerator } from 'react-hook-mask'
+import Link from 'next/link'
+import Image from 'next/image'
+
+const maskGenerator = createDefaultMaskGenerator('999')
+
 
 interface FormData {
   paymentMethod: string
@@ -95,6 +101,7 @@ export default function PaymentForm({ camper, payments }: Props) {
     })
 
     reset()
+    setValue('registeredBy', admin)
   }
 
   const handleInscribirOtro = () => {
@@ -108,6 +115,8 @@ export default function PaymentForm({ camper, payments }: Props) {
       setValue('registeredBy', admin)
     }
   }, [])
+
+  console.log('data', data)
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className='space-y-6 text-gray-800'>
@@ -149,7 +158,13 @@ export default function PaymentForm({ camper, payments }: Props) {
           id='receiptNumber'
           className={`w-full px-4 py-2 border ${errors.receiptNumber ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors`}
           placeholder='(001) Número de recibo en el talonario'
-          {...register('receiptNumber')}
+          {...register('receiptNumber', {
+            onChange(event) {
+              const { value } = event.target
+              const maskedValue = mask(value, maskGenerator)
+              setValue('receiptNumber', maskedValue)
+            },
+          })}
         />
         {errors.receiptNumber && <p className='mt-1 text-xs text-red-600'>{errors.receiptNumber.message}</p>}
       </div>
@@ -168,7 +183,7 @@ export default function PaymentForm({ camper, payments }: Props) {
                   <input
                     type='file'
                     id='comprobante'
-                    accept='image/*,.pdf'
+                    accept='image/*'
                     className='sr-only'
                     onChange={(e) => {
                       const file = e.target.files?.[0] || null
@@ -215,7 +230,7 @@ export default function PaymentForm({ camper, payments }: Props) {
               }
               {data.payments.map((payment) => (
                 <li key={payment.id} className='px-4 py-3'>
-                  <div className='flex items-center justify-between'>
+                  <div className='flex items-start justify-between'>
                     <div>
                       <p className='text-xs text-gray-500'>
                         Fecha: {new Date(payment.createdAt).toLocaleDateString()}
@@ -225,13 +240,30 @@ export default function PaymentForm({ camper, payments }: Props) {
                       </p>
                       <p className='text-xs text-gray-500'>
                         Registrado por: {payment.registeredBy}
-                      </p>
-                      <p className={`text-xs ${payment.confirmPayment ? 'text-green-500' : 'text-red-500'}`}>
+                      </p>                      <p className={`text-xs ${payment.confirmPayment ? 'text-green-500' : 'text-red-500'}`}>
                         Pago Confirmado: {payment.confirmPayment ? 'Sí' : 'No'}
                       </p>
+                      {payment.proofOfPayment && (
+                        <div className="mt-2">
+                          <Link
+                            href={`/${camper.id}/pagos/${payment.id}/comprobante`}
+                            target="_blank"
+                            className="text-xs text-blue-500 hover:text-blue-700 flex items-center"
+                          >
+                            <Image
+                              src={`/${camper.id}/pagos/${payment.id}/comprobante`}
+                              alt="Comprobante de pago"
+                              width={50}
+                              height={50}
+                              className="rounded border border-gray-300 object-cover"
+                            />
+                            <span className="ml-2 underline">Ver comprobante</span>
+                          </Link>
+                        </div>
+                      )}
                     </div>
                     <div>
-                      <span className='inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800'>
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${payment.paymentMethod === 'CASH' ? 'text-blue-800 bg-blue-100' : 'text-red-800 bg-red-100'}`}>
                         {payment.paymentMethod === 'TRANSFER' ? 'Transferencia' : 'Efectivo'}
                       </span>
                       <p className='text-sm font-semibold text-gray-900 mt-1 text-right'>
@@ -249,11 +281,17 @@ export default function PaymentForm({ camper, payments }: Props) {
                   L. {data.payments.reduce((sum, payment) => sum + payment.quantity, 0)}
                 </span>
               </div>
-              {camper.totalToPaid > data.payments.reduce((sum, payment) => sum + payment.quantity, 0) && (
+              {camper.totalToPaid > data.payments.reduce((sum, payment) => sum + payment.quantity, 0) ? (
                 <div className='flex justify-between items-center mt-1'>
                   <span className='text-sm text-gray-700'>Saldo Pendiente:</span>
                   <span className='text-sm font-bold text-red-600'>
                     L. {camper.totalToPaid - data.payments.reduce((sum, payment) => sum + payment.quantity, 0)}
+                  </span>
+                </div>
+              ) : (
+                <div className='flex justify-between items-center mt-1'>
+                  <span className='text-sm font-bold text-green-600'>
+                    Sin Saldo Pendiente
                   </span>
                 </div>
               )}

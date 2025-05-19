@@ -45,6 +45,7 @@ export default async function paymentAction(_: ReturnAction, payload: FormData):
   if (!!payload.proofOfPayment) {
     const uploadFile = payload.proofOfPayment
     const id = newPayment.id
+    const camperId = newPayment.camperId
 
     const arrayBuffer = await uploadFile.arrayBuffer()
     const buffer = Buffer.from(arrayBuffer)
@@ -52,12 +53,25 @@ export default async function paymentAction(_: ReturnAction, payload: FormData):
     const type = await fileTypeFromBuffer(buffer)
 
     if (!!type) {
-      const file = bucket.file(`${id}_proofOfPayment.${type.ext}`)
+      const fileName = `${id}_proofOfPayment.${type.ext}`
+      const filePath = `${camperId}/${fileName}`
+      const file = bucket.file(filePath)
 
       await file.save(buffer, {
         contentType: uploadFile.type
       }).catch((error) => {
         console.error('Error uploading file:', error)
+      }).then(async () => {
+        await prisma.payment.update({
+          where: {
+            id: newPayment.id
+          },
+          data: {
+            proofOfPayment: fileName
+          }
+        })
+
+        newPayment.proofOfPayment = fileName
       })
     }
   }

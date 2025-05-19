@@ -33,6 +33,7 @@ model Payment {
   camperId       Int
   camper         Camper        @relation(name: "PaymentToCamper", fields: [camperId], references: [id])
   quantity       Int
+  proofOfPayment String        @default("")
   confirmPayment Boolean       @default(false)
   registeredBy   String
 }

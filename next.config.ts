@@ -6,6 +6,11 @@ const nextConfig: NextConfig = {
 
   // // Ensure server knows to serve static assets from _next path
   // poweredByHeader: false,
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '50mb',
+    },
+  }
 }
 
 export default nextConfig

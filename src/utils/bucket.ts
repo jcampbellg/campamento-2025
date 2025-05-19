@@ -1,20 +1,15 @@
 import { Storage } from '@google-cloud/storage'
 import fs from 'fs'
-import path from 'path'
 
 const projectId = process.env.PROJECT_ID || ''
 const bucketName = process.env.BUCKET_NAME || ''
 const serviceKey = process.env.SERVICE_KEY || ''
 
-// check if service key file exists
-const serviceKeyPath = path.join(__dirname, '../service-account.json')
-if (!fs.existsSync(serviceKeyPath)) {
-  // generate json file from service key
-  if (serviceKey) {
-    console.log('Creating service key file...')
-    const serviceKeyJson = Buffer.from(serviceKey, 'base64').toString('utf-8')
-    fs.writeFileSync('./service-key.json', serviceKeyJson)
-  }
+// check if file exists ./service-key.json
+if (!fs.existsSync('./service-key.json')) {
+  console.log('Creating service-key.json file')
+  const jsonServiceKey = JSON.stringify(JSON.parse(serviceKey || ''), null, 2)
+  fs.writeFileSync('./service-key.json', jsonServiceKey)
 }
 
 const storage = new Storage({
