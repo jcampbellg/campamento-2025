@@ -49,8 +49,11 @@ export async function GET(request: NextRequest, { params }: Params) {
     const fileData = fs.readFileSync(`./${fileName}`)
     const type = await fileTypeFromBuffer(fileData)
 
+    if (!type) {
+      return NextResponse.json({ message: 'File type not recognized' }, { status: 400 })
+    }
+
     const response = new Response(fileData)
-    // @ts-expect-error
     response.headers.set('content-type', type?.mime)
 
     // Delete the downloaded file
