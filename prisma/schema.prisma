@@ -27,7 +27,6 @@ model Camper {
 model Payment {
   id             Int           @id @default(autoincrement())
   paymentMethod  PaymentMethod @default(CASH)
-  nameOfproof    String
   createdAt      DateTime      @default(now())
   updatedAt      DateTime?     @updatedAt
   receiptNumber  String
