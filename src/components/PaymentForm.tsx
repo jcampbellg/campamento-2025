@@ -116,8 +116,6 @@ export default function PaymentForm({ camper, payments }: Props) {
     }
   }, [])
 
-  console.log('data', data)
-
   return (
     <form onSubmit={handleSubmit(onSubmit)} className='space-y-6 text-gray-800'>
       <div>
