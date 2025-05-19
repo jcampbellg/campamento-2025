@@ -258,7 +258,7 @@ export default function RegisterForm() {
             <input
               type='tel'
               id='whatsapp'
-              className={`w-full ${country === 'HN' ? 'pl-14' : 'pl-8'} px-4 py-2 border ${errors.whatsapp ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors`}
+              className={`w-full ${country === 'HN' ? 'pl-[51.55px]' : 'pl-[35.81px]'} pr-4 py-2 border ${errors.whatsapp ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors`}
               placeholder={country === 'HN' ? '1234-1234' : '(123) 456-7890'}
               {...register('whatsapp', {
                 onChange(event) {

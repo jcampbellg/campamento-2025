@@ -1,8 +1,8 @@
+export const dynamic = 'force-dynamic'
+
 import PaymentForm from '@/components/PaymentForm'
 import prisma from '@/utils/prismaClient'
 import { notFound } from 'next/navigation'
-
-export const dynamic = 'force-dynamic'
 
 async function getCamperById(id: string) {
   const camper = await prisma.camper.findUnique({
@@ -17,11 +17,19 @@ async function getCamperById(id: string) {
 async function getPaymentsByCamperById(id: string) {
   const payments = await prisma.payment.findMany({
     where: {
-      id: parseInt(id)
+      camperId: parseInt(id)
     }
   })
 
-  return payments
+  return payments.map((payment) => {
+    const localUrl = `/${payment.camperId}/pagos/${payment.id}/comprobante`
+    const proofOfPayment = payment.proofOfPayment
+
+    return {
+      ...payment,
+      proofOfPayment: !!proofOfPayment ? localUrl : '',
+    }
+  })
 }
 
 export default async function CamperPage({ params }: { params: Promise<{ camperId: string }> }) {
@@ -44,6 +52,9 @@ export default async function CamperPage({ params }: { params: Promise<{ camperI
           <h1 className='text-3xl font-extrabold text-white text-center'>Información de Pago</h1>
           <p className='text-blue-100 text-center mt-2'>Nombre: {camper.firstName} {camper.lastName}</p>
           <p className='text-blue-100 text-center mt-2'>ID: {camper.id}</p>
+          {
+            !!camper.notes && <p className='text-blue-100 text-center mt-2'>Notas: {camper.notes}</p>
+          }
         </div>
         <div className='p-4 sm:p-8'>
           <PaymentForm camper={camper} payments={payments || []} />

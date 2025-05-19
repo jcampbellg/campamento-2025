@@ -1,16 +1,22 @@
 'use client'
 
-import { useForm, SubmitHandler, Resolver } from 'react-hook-form'
+import { useForm, SubmitHandler, Resolver, Controller } from 'react-hook-form'
 import { useRouter } from 'next/navigation'
 import { Camper, Payment } from '@prisma-db-1/client'
 import useAction from '@/hooks/useAction'
 import paymentAction from '@/actions/paymentAction'
 import { useEffect } from 'react'
+import { mask, createDefaultMaskGenerator } from 'react-hook-mask'
+import Link from 'next/link'
+import Image from 'next/image'
+
+const maskGenerator = createDefaultMaskGenerator('999')
+
 
 interface FormData {
   paymentMethod: string
-  nameOfProof: string
   receiptNumber: string
+  proofOfPayment: File | null
   quantity: number
   registeredBy: string
 }
@@ -24,14 +30,6 @@ const formResolver: Resolver<FormData> = (values) => {
     errors.paymentMethod = {
       type: 'required',
       message: 'Método de pago es requerido'
-    }
-  }
-
-  // Validate name of proof
-  if (!values.nameOfProof || values.nameOfProof.trim().length < 3) {
-    errors.nameOfProof = {
-      type: 'required',
-      message: 'Nombre del depositante es requerido'
     }
   }
 
@@ -76,16 +74,13 @@ type Props = {
 
 export default function PaymentForm({ camper, payments }: Props) {
   const { data, isPending, run } = useAction(paymentAction, { success: false, payments: payments })
-
-  console.log('data:', data)
-
   const router = useRouter()
 
-  const { register, handleSubmit, formState: { errors }, setValue } = useForm<FormData>({
+  const { register, handleSubmit, formState: { errors }, setValue, control, reset } = useForm<FormData>({
     defaultValues: {
       paymentMethod: 'default',
-      nameOfProof: camper.firstName + ' ' + camper.lastName,
       receiptNumber: '',
+      proofOfPayment: null,
       quantity: 500,
       registeredBy: ''
     },
@@ -104,6 +99,9 @@ export default function PaymentForm({ camper, payments }: Props) {
       receiptNumber: data.receiptNumber,
       camperId: camper.id
     })
+
+    reset()
+    setValue('registeredBy', admin)
   }
 
   const handleInscribirOtro = () => {
@@ -117,6 +115,8 @@ export default function PaymentForm({ camper, payments }: Props) {
       setValue('registeredBy', admin)
     }
   }, [])
+
+  console.log('data', data)
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className='space-y-6 text-gray-800'>
@@ -152,27 +152,53 @@ export default function PaymentForm({ camper, payments }: Props) {
         {errors.quantity && <p className='mt-1 text-xs text-red-600'>{errors.quantity.message}</p>}
       </div>
       <div>
-        <label htmlFor='nameOfProof' className='block text-sm font-medium text-gray-700 mb-1'>Nombre del Depositante (A nombre de quien esta la transferencia)</label>
-        <input
-          type='text'
-          id='nameOfProof'
-          className={`w-full px-4 py-2 border ${errors.nameOfProof ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors`}
-          placeholder='Persona que realizó la transferencia o pago'
-          {...register('nameOfProof')}
-        />
-        {errors.nameOfProof && <p className='mt-1 text-xs text-red-600'>{errors.nameOfProof.message}</p>}
-      </div>
-      <div>
         <label htmlFor='receiptNumber' className='block text-sm font-medium text-gray-700 mb-1'>Número de Recibo</label>
         <input
           type='text'
           id='receiptNumber'
           className={`w-full px-4 py-2 border ${errors.receiptNumber ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors`}
-          placeholder='(A-1) Ingrese el talonario y número de recibo'
-          {...register('receiptNumber')}
+          placeholder='(001) Número de recibo en el talonario'
+          {...register('receiptNumber', {
+            onChange(event) {
+              const { value } = event.target
+              const maskedValue = mask(value, maskGenerator)
+              setValue('receiptNumber', maskedValue)
+            },
+          })}
         />
         {errors.receiptNumber && <p className='mt-1 text-xs text-red-600'>{errors.receiptNumber.message}</p>}
       </div>
+
+      <div>
+        <label htmlFor='comprobante' className='block text-sm font-medium text-gray-700 mb-1'>Comprobante</label>
+        <Controller
+          control={control}
+          name="proofOfPayment"
+          render={({ field: { onChange, value, ...field } }) => {
+            const fileName = value instanceof File ? value.name : null
+            return (
+              <div className='mt-1 flex items-center'>
+                <label className={`cursor-pointer w-full px-4 py-2 border border-gray-300 rounded-lg text-sm ${!!fileName ? 'text-gray-700' : 'text-gray-500'} bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all`}>
+                  <span>{fileName || 'Haz click para subir comprobante'}</span>
+                  <input
+                    type='file'
+                    id='comprobante'
+                    accept='image/*'
+                    className='sr-only'
+                    onChange={(e) => {
+                      const file = e.target.files?.[0] || null
+                      onChange(file)
+                    }}
+                    {...field}
+                  />
+                </label>
+              </div>
+            )
+          }}
+        />
+        <p className='mt-1 text-xs text-gray-500'>Formatos aceptados: JPG, PNG, PDF</p>
+      </div>
+
       <div>
         <label htmlFor='registeredBy' className='block text-sm font-medium text-gray-700 mb-1'>Inscrito Por</label>
         <input
@@ -189,7 +215,9 @@ export default function PaymentForm({ camper, payments }: Props) {
           disabled={isPending}
           className='w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all transform hover:scale-[1.02] disabled:hover:scale-[1] disabled:cursor-not-allowed disabled:opacity-70'
         >
-          Agregar Pago
+          {
+            isPending ? 'Cargando...' : 'Agregar Pago'
+          }
         </button>
         <div className='mt-6'>
           <h3 className='text-lg font-medium text-gray-900 mb-3'>Historial de Pagos</h3>
@@ -202,26 +230,40 @@ export default function PaymentForm({ camper, payments }: Props) {
               }
               {data.payments.map((payment) => (
                 <li key={payment.id} className='px-4 py-3'>
-                  <div className='flex items-center justify-between'>
+                  <div className='flex items-start justify-between'>
                     <div>
-                      <p className='text-sm font-medium text-gray-900'>
-                        {payment.nameOfproof}
-                      </p>
                       <p className='text-xs text-gray-500'>
                         Fecha: {new Date(payment.createdAt).toLocaleDateString()}
                       </p>
-                      <p className='text-xs text-gray-500'>
+                      <p className='text-xs text-gray-500 font-bold'>
                         Recibo #: {payment.receiptNumber}
                       </p>
                       <p className='text-xs text-gray-500'>
                         Registrado por: {payment.registeredBy}
-                      </p>
-                      <p className={`text-xs ${payment.confirmPayment ? 'text-green-500' : 'text-red-500'}`}>
+                      </p>                      <p className={`text-xs ${payment.confirmPayment ? 'text-green-500' : 'text-red-500'}`}>
                         Pago Confirmado: {payment.confirmPayment ? 'Sí' : 'No'}
                       </p>
+                      {payment.proofOfPayment && (
+                        <div className="mt-2">
+                          <Link
+                            href={`/${camper.id}/pagos/${payment.id}/comprobante`}
+                            target="_blank"
+                            className="text-xs text-blue-500 hover:text-blue-700 flex items-center"
+                          >
+                            <Image
+                              src={`/${camper.id}/pagos/${payment.id}/comprobante`}
+                              alt="Comprobante de pago"
+                              width={50}
+                              height={50}
+                              className="rounded border border-gray-300 object-cover"
+                            />
+                            <span className="ml-2 underline">Ver comprobante</span>
+                          </Link>
+                        </div>
+                      )}
                     </div>
                     <div>
-                      <span className='inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800'>
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${payment.paymentMethod === 'CASH' ? 'text-blue-800 bg-blue-100' : 'text-red-800 bg-red-100'}`}>
                         {payment.paymentMethod === 'TRANSFER' ? 'Transferencia' : 'Efectivo'}
                       </span>
                       <p className='text-sm font-semibold text-gray-900 mt-1 text-right'>
@@ -239,11 +281,17 @@ export default function PaymentForm({ camper, payments }: Props) {
                   L. {data.payments.reduce((sum, payment) => sum + payment.quantity, 0)}
                 </span>
               </div>
-              {camper.totalToPaid > data.payments.reduce((sum, payment) => sum + payment.quantity, 0) && (
+              {camper.totalToPaid > data.payments.reduce((sum, payment) => sum + payment.quantity, 0) ? (
                 <div className='flex justify-between items-center mt-1'>
                   <span className='text-sm text-gray-700'>Saldo Pendiente:</span>
                   <span className='text-sm font-bold text-red-600'>
                     L. {camper.totalToPaid - data.payments.reduce((sum, payment) => sum + payment.quantity, 0)}
+                  </span>
+                </div>
+              ) : (
+                <div className='flex justify-between items-center mt-1'>
+                  <span className='text-sm font-bold text-green-600'>
+                    Sin Saldo Pendiente
                   </span>
                 </div>
               )}
