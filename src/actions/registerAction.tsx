@@ -7,7 +7,6 @@ interface FormData {
   lastName: string
   gender: 'FEMALE' | 'MALE'
   age: number
-  shirtSize: 'XS' | 'S' | 'M' | 'L' | 'XL' | 'XXL' | 'XXXL' | 'XXXXL'
   notes: string
   country: 'US' | 'HN'
   whatsapp: string
@@ -27,7 +26,7 @@ export default async function registerAction(_: undefined | ReturnAction, payloa
       notes: payload.notes.trim(),
       gender: payload.gender,
       registeredBy: payload.registeredBy.trim(),
-      shirtSize: payload.shirtSize,
+      shirtSize: 'S',
       whatsapp: payload.whatsapp
     }
   })

@@ -14,7 +14,6 @@ interface FormData {
   lastName: string
   gender: 'FEMALE' | 'MALE' | 'default'
   age: number | ''
-  shirtSize: 'XS' | 'S' | 'M' | 'L' | 'XL' | 'XXL' | 'XXXL' | 'XXXXL' | 'default'
   notes: string
   country: 'US' | 'HN'
   whatsapp: string
@@ -63,14 +62,6 @@ const formResolver: Resolver<FormData> = (values) => {
       }
     }
   }
-
-  // Validate shirt size
-  if (!values.shirtSize || values.shirtSize === 'default') {
-    errors.shirtSize = {
-      type: 'required',
-      message: 'Debe seleccionar una talla'
-    }
-  }
   // Validate whatsapp number
   if (!values.whatsapp) {
     errors.whatsapp = {
@@ -115,7 +106,6 @@ export default function RegisterForm() {
       lastName: '',
       gender: 'default',
       age: '',
-      shirtSize: 'default',
       notes: '',
       country: 'HN',
       whatsapp: '',
@@ -152,8 +142,8 @@ export default function RegisterForm() {
 
     run({
       ...data,
+      whatsapp: `${data.country === 'HN' ? '+504' : '+1'} ${data.whatsapp}`,
       age: typeof data.age === 'string' ? parseInt(data.age) : data.age,
-      shirtSize: data.shirtSize === 'default' ? 'M' : data.shirtSize,
       gender: data.gender === 'default' ? 'MALE' : data.gender
     })
   }
@@ -211,25 +201,6 @@ export default function RegisterForm() {
             {...register('age', { valueAsNumber: true })}
           />
           {errors.age && <p className='mt-1 text-xs text-red-600'>{errors.age.message}</p>}
-        </div>
-        <div className='col-span-1'>
-          <label htmlFor='shirtSize' className='block text-sm font-medium text-gray-700 mb-1'>Talla</label>
-          <select
-            id='shirtSize'
-            className={`h-[42px] w-full px-4 py-2 border ${errors.shirtSize ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors`}
-            {...register('shirtSize')}
-          >
-            <option disabled value='default'>Seleccionar</option>
-            <option value='XS'>XS</option>
-            <option value='S'>S</option>
-            <option value='M'>M</option>
-            <option value='L'>L</option>
-            <option value='XL'>XL</option>
-            <option value='XXL'>XXL</option>
-            <option value='XXXL'>XXXL</option>
-            <option value='XXXXL'>XXXXL</option>
-          </select>
-          {errors.shirtSize && <p className='mt-1 text-xs text-red-600'>{errors.shirtSize.message}</p>}
         </div>
       </div>      <div>
         <label htmlFor='whatsapp' className='block text-sm font-medium text-gray-700 mb-1'>WhatsApp</label>
