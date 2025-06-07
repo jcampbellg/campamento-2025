@@ -175,7 +175,7 @@ export default function RegisterForm() {
         </div>
       </div>
 
-      <div className='grid grid-cols-1 gap-6 sm:grid-cols-3'>
+      <div className='grid grid-cols-1 gap-6 sm:grid-cols-2'>
         <div className='col-span-1'>
           <label htmlFor='gender' className='block text-sm font-medium text-gray-700 mb-1'>Sexo</label>
           <select
