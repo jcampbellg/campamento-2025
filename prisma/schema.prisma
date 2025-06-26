@@ -19,9 +19,10 @@ model Camper {
   shirtSize    ShirtSize
   notes        String
   whatsapp     String
-  payments     Payment[] @relation(name: "PaymentToCamper")
   totalToPaid  Int       @default(1500)
   registeredBy String
+  isHere       Boolean   @default(false)
+  payments     Payment[] @relation("PaymentToCamper")
 }
 
 model Payment {
@@ -31,11 +32,11 @@ model Payment {
   updatedAt      DateTime?     @updatedAt
   receiptNumber  String
   camperId       Int
-  camper         Camper        @relation(name: "PaymentToCamper", fields: [camperId], references: [id])
   quantity       Int
   proofOfPayment String        @default("")
   confirmPayment Boolean       @default(false)
   registeredBy   String
+  camper         Camper        @relation("PaymentToCamper", fields: [camperId], references: [id])
 }
 
 enum PaymentMethod {
