@@ -15,7 +15,7 @@ type Payload = {
   isHere: boolean
 }
 
-export default async function attendanceAction(prevState: ReturnAction, payload: Payload): Promise<ReturnAction> {
+export default async function attendanceAction(prevState: ReturnAction | undefined, payload: Payload): Promise<ReturnAction> {
   const { camperId, isHere } = payload
   const camper = await prisma.camper.update({
     where: { id: camperId },
@@ -34,7 +34,7 @@ type ReturnAllAction = {
   campers: CamperWithPayments[]
 }
 
-export async function attendanceAllAction(prevState: ReturnAllAction, payload: {}): Promise<ReturnAllAction> {
+export async function attendanceAllAction(_: ReturnAllAction, payload: undefined): Promise<ReturnAllAction> {
   const campers = await prisma.camper.findMany({
     include: {
       payments: true,

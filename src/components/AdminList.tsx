@@ -12,6 +12,9 @@ type AdminListProps = {
 export default function AdminList(props: AdminListProps) {
   const { data, isPending, run: runStats } = useAction(attendanceAllAction, props)
 
+  const camperAction = useAction(attendanceAction, undefined)
+
+
   const { campers } = data
 
   const campersTotal = campers.length
@@ -28,7 +31,6 @@ export default function AdminList(props: AdminListProps) {
       {isPending && <p className='text-sm text-gray-500'>Cargando estadísticas...</p>}
       <ul className='divide-y divide-gray-200'>
         {campers.map((c, i) => {
-          const { isPending, run } = useAction(attendanceAction, { camper: c })
 
           const camper = c
 
@@ -36,8 +38,8 @@ export default function AdminList(props: AdminListProps) {
           const totalLeft = camper.totalToPaid - totalPaid
 
           const updateAttendance = () => {
-            run({ camperId: camper.id, isHere: !camper.isHere })
-            runStats({})
+            camperAction.run({ camperId: camper.id, isHere: !camper.isHere })
+            runStats(undefined)
           }
           return (
             <li key={`camper.${camper.id}`} className='px-4 py-3'>
